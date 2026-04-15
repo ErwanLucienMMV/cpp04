@@ -8,7 +8,7 @@ SRC = src/main.cpp \
 		src/cat.cpp \
 		src/dog.cpp
 
-NAME = PetsShop
+NAME = petsShop
 
 OBJ = $(SRC:.cpp=.o)
 
