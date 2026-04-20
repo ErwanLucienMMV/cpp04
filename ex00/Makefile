@@ -6,7 +6,9 @@ RESET = \033[0m
 SRC = src/main.cpp \
 		src/animal.cpp \
 		src/cat.cpp \
-		src/dog.cpp
+		src/dog.cpp	\
+		src/wrongAnimal.cpp \
+		src/wrongCat.cpp \
 
 NAME = petsShop
 
