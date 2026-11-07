@@ -3,6 +3,7 @@
 #include "Cure.hpp"
 #include "Ice.hpp"
 #include "MateriaSource.hpp"
+#include "TestMateria.hpp"
 #include <climits>
 #include <iostream>
 #include <sstream>
@@ -185,7 +186,6 @@ static void testSource()
 	source.learnMateria(0);
 	AMateria *ice = new Ice();
 	source.learnMateria(ice);
-	source.learnMateria(ice);
 	source.learnMateria(new Ice());
 	source.learnMateria(new Ice());
 	source.learnMateria(new Cure());
@@ -238,6 +238,110 @@ static void testSourceCopies()
 	std::cout << "[OK] Source deep copies, self-assignment and replacement" << std::endl;
 }
 
+static void testCustomMateria()
+{
+	check(TestMateria::getLiveCount() == 0, "Unexpected live test Materia");
+	{
+		MateriaSource source;
+		int clones = TestMateria::getCloneCount();
+		source.learnMateria(new TestMateria());
+		check(TestMateria::getCloneCount() == clones + 1,
+			"learnMateria must copy the input through clone");
+		check(TestMateria::getLiveCount() == 1,
+			"Successful learning must release the transferred input");
+		for (int i = 1; i < 4; ++i)
+			source.learnMateria(new TestMateria());
+		check(TestMateria::getCloneCount() == clones + 4
+			&& TestMateria::getLiveCount() == 4,
+			"Duplicate types must occupy separate template slots");
+		AMateria *rejected = new Cure();
+		source.learnMateria(rejected);
+		check(source.createMateria("cure") == 0,
+			"Full source accepted a fifth template");
+		delete rejected;
+		Character target("bob");
+		Character original("original");
+		original.equip(source.createMateria("test"));
+		checkUse(original, 0, target, "* test use 1 on bob *\n");
+		Character copy(original);
+		Character assigned;
+		assigned.equip(new TestMateria());
+		assigned = original;
+		checkUse(original, 0, target, "* test use 2 on bob *\n");
+		checkUse(original, 0, target, "* test use 3 on bob *\n");
+		checkUse(copy, 0, target, "* test use 2 on bob *\n");
+		checkUse(assigned, 0, target, "* test use 2 on bob *\n");
+		Character fresh("fresh");
+		fresh.equip(source.createMateria("test"));
+		checkUse(fresh, 0, target, "* test use 1 on bob *\n");
+		MateriaSource sourceCopy(source);
+		Character fromCopy("from copy");
+		fromCopy.equip(sourceCopy.createMateria("test"));
+		checkUse(fromCopy, 0, target, "* test use 1 on bob *\n");
+	}
+	check(TestMateria::getLiveCount() == 0, "Custom Materia leaked");
+	std::cout << "[OK] Learning copies, custom Materia and independent mutable state"
+		<< std::endl;
+}
+
+static void testCloneFailures()
+{
+	{
+		MateriaSource source;
+		AMateria *input = new TestMateria();
+		TestMateria::setCloneBudget(0);
+		bool failed = false;
+		try
+		{
+			source.learnMateria(input);
+		}
+		catch (std::runtime_error const &)
+		{
+			failed = true;
+		}
+		check(failed && TestMateria::getLiveCount() == 1,
+			"Failed learning must retain caller ownership of the input");
+		check(source.createMateria("test") == 0,
+			"Failed learning changed the source");
+		delete input;
+		TestMateria::setCloneBudget(-1);
+		source.learnMateria(new TestMateria());
+		source.learnMateria(new TestMateria());
+		TestMateria::setCloneBudget(1);
+		failed = false;
+		try
+		{
+			MateriaSource copy(source);
+		}
+		catch (std::runtime_error const &)
+		{
+			failed = true;
+		}
+		check(failed && TestMateria::getLiveCount() == 2,
+			"Failed source copy leaked a partial clone");
+		TestMateria::setCloneBudget(-1);
+		Character original("original");
+		original.equip(source.createMateria("test"));
+		original.equip(source.createMateria("test"));
+		TestMateria::setCloneBudget(1);
+		failed = false;
+		try
+		{
+			Character copy(original);
+		}
+		catch (std::runtime_error const &)
+		{
+			failed = true;
+		}
+		check(failed && TestMateria::getLiveCount() == 4,
+			"Failed Character copy leaked a partial clone");
+		TestMateria::setCloneBudget(-1);
+	}
+	check(TestMateria::getLiveCount() == 0, "Clone failure leaked a Materia");
+	std::cout << "[OK] Throwing clones preserve ownership and clean partial copies"
+		<< std::endl;
+}
+
 int main()
 {
 	try
@@ -248,6 +352,8 @@ int main()
 		testCharacterCopies();
 		testSource();
 		testSourceCopies();
+		testCustomMateria();
+		testCloneFailures();
 	}
 	catch (std::exception const &error)
 	{

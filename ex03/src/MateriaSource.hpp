@@ -16,7 +16,8 @@ class MateriaSource : public IMateriaSource
 		MateriaSource &operator=(MateriaSource const &origin);
 		virtual ~MateriaSource();
 
-		// Accepted templates belong to this source; rejected ones to the caller.
+		// On success, store a clone and delete the transferred input.
+		// Full-source rejection or a throwing clone leaves m with the caller.
 		virtual void learnMateria(AMateria *m);
 		// Each result is a new clone owned by the caller.
 		virtual AMateria *createMateria(std::string const &type);

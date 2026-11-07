@@ -10,7 +10,8 @@ SRC = src/main.cpp \
 	src/Ice.cpp \
 	src/Cure.cpp \
 	src/Character.cpp \
-	src/MateriaSource.cpp
+	src/MateriaSource.cpp \
+	src/TestMateria.cpp
 
 NAME = interfaceRecap
 
