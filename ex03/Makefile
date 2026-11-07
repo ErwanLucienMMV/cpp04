@@ -1,41 +1,37 @@
-RED = \033[0;31m
-GREEN = \033[0;32m
-YELLOW = \033[0;33m
-RESET = \033[0m
-
-SRC = src/main.cpp \
-		src/animal.cpp \
-		src/cat.cpp \
-		src/dog.cpp \
-		src/brain.cpp \
-
-NAME = abstractConcepts
-
-OBJ = $(SRC:.cpp=.o)
-
-FLAGS = -std=c++98 -Wall -Werror -Wextra
+NAME = interfaceRecap
 
 CXX = c++
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98
+
+SRC = src/main.cpp \
+	src/AMateria.cpp \
+	src/ICharacter.cpp \
+	src/IMateriaSource.cpp \
+	src/Ice.cpp \
+	src/Cure.cpp \
+	src/Character.cpp \
+	src/MateriaSource.cpp
+
+OBJ = $(SRC:.cpp=.o)
+DEP = $(OBJ:.o=.d)
+
+all: $(NAME)
+
+$(NAME): $(OBJ)
+	$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME)
 
 %.o: %.cpp
-	@$(CC) $(FLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
-all	: $(NAME)
+clean:
+	rm -f $(OBJ) $(DEP)
 
-$(NAME)	: $(OBJ)
-	@echo "$(YELLOW)[$(NAME)] $(GREEN).o created $(RESET)"
-	@$(CXX) $(FLAGS) $(OBJ) -o $(NAME)
-	@echo "$(YELLOW)[$(NAME)] $(GREEN)executable created successfully$(RESET)"
+fclean: clean
+	rm -f $(NAME)
 
-clean	:
-	@rm -rf $(OBJ)
-	@echo "$(YELLOW)[$(NAME)] $(RED).o deleted$(RESET)"
+re: fclean
+	$(MAKE) all
 
-fclean	: clean
-	@rm -rf $(NAME)
-	@echo "$(YELLOW)[$(NAME)] $(RED).a deleted$(RESET)"
-	@echo "$(YELLOW)[$(NAME)] $(GREEN)forced clean successfull$(RESET)"
-
-re	: fclean all
+-include $(DEP)
 
 .PHONY: all clean fclean re
