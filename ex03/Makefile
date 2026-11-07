@@ -1,7 +1,7 @@
-NAME = interfaceRecap
-
-CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98
+RED = \033[0;31m
+GREEN = \033[0;32m
+YELLOW = \033[0;33m
+RESET = \033[0m
 
 SRC = src/main.cpp \
 	src/AMateria.cpp \
@@ -12,25 +12,36 @@ SRC = src/main.cpp \
 	src/Character.cpp \
 	src/MateriaSource.cpp
 
+NAME = interfaceRecap
+
 OBJ = $(SRC:.cpp=.o)
 DEP = $(OBJ:.o=.d)
 
-all: $(NAME)
+FLAGS = -std=c++98 -Wall -Werror -Wextra
 
-$(NAME): $(OBJ)
-	$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME)
+CXX = c++
+
+all	: $(NAME)
+
+$(NAME)	: $(OBJ)
+	@printf '%b\n' "$(YELLOW)[$(NAME)] $(GREEN).o created $(RESET)"
+	@$(CXX) $(FLAGS) $(OBJ) -o $(NAME)
+	@printf '%b\n' "$(YELLOW)[$(NAME)] $(GREEN)executable created successfully$(RESET)"
 
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
+	@$(CXX) $(FLAGS) -MMD -MP -c $< -o $@
 
-clean:
-	rm -f $(OBJ) $(DEP)
+clean	:
+	@rm -f $(OBJ) $(DEP)
+	@printf '%b\n' "$(YELLOW)[$(NAME)] $(RED).o deleted$(RESET)"
 
-fclean: clean
-	rm -f $(NAME)
+fclean	: clean
+	@rm -f $(NAME)
+	@printf '%b\n' "$(YELLOW)[$(NAME)] $(RED)executable deleted$(RESET)"
+	@printf '%b\n' "$(YELLOW)[$(NAME)] $(GREEN)forced clean successful$(RESET)"
 
-re: fclean
-	$(MAKE) all
+re	: fclean
+	@$(MAKE) --no-print-directory all
 
 -include $(DEP)
 
